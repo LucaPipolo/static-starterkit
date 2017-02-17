@@ -1,0 +1,28 @@
+{
+  "name": "project-name",
+  "description": "Project description.",
+  "main": "index.html",
+  "authors": [
+    "Name Surname <email@domain.com>"
+  ],
+  "license": "GPL-2.0",
+  "homepage": "http://www.your-url.com/",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.1.1"
+  },
+  "overrides": {
+    "jquery": {
+      "main": [
+        "./dist/jquery.min.js"
+      ]
+    }
+  }
+}

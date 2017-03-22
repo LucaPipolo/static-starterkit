@@ -4,8 +4,8 @@ var autoprefixer = require('gulp-autoprefixer');
 var browserSync = require('browser-sync').create();
 var changed = require('gulp-changed');
 var coffee = require('gulp-coffee');
+var coffeelint = require('gulp-coffeelint');
 var concat = require('gulp-concat');
-var cslint = require('gulp-cslint');
 var csscomb = require('gulp-csscomb');
 var flatten = require('gulp-flatten');
 var gulp = require('gulp');
@@ -218,9 +218,9 @@ gulp.task('coffee', function() {
 });
 
 // ### Scripts
-// `gulp scripts` - Runs CSLint then compiles, combines, and optimizes Bower JS
+// `gulp scripts` - Runs Coffeelint then compiles, combines, and optimizes Bower JS
 // and project JS.
-gulp.task('scripts', ['cslint', 'coffee'], function() {
+gulp.task('scripts', ['coffeelint', 'coffee'], function() {
   var merged = mergeStream();
   manifest.forEachDependency('js', function(dep) {
     merged.add(
@@ -275,20 +275,12 @@ gulp.task('sasslint', function () {
     .pipe(sasslint.failOnError());
 });
 
-// ### CSLint
-// `gulp cslint` - Lints configuration JSON and project JS.
-gulp.task('cslint', function () {
+// ### Coffeelint
+// `gulp coffeelint` - Lints configuration JSON and project JS.
+gulp.task('coffeelint', function () {
   return gulp.src(['assets/scripts/**/*.coffee'])
-    .pipe(cslint({
-      globals: [
-        'jQuery',
-        '$',
-        'document',
-        'window',
-        'google'
-      ]
-    }))
-    .pipe(cslint.format());
+    .pipe(coffeelint())
+    .pipe(coffeelint.reporter());
 });
 
 // ### Clean
@@ -304,7 +296,7 @@ gulp.task('clean', require('del').bind(null, [path.dist]));
 gulp.task('watch', function() {
   gulp.watch([path.source + 'templates/**/*'], ['templates']);
   gulp.watch([path.source + 'styles/**/*'], ['sasslint', 'styles']);
-  gulp.watch([path.source + 'scripts/**/*'], ['cslint', 'scripts']);
+  gulp.watch([path.source + 'scripts/**/*.coffee'], ['scripts']);
   gulp.watch([path.source + 'fonts/**/*'], ['fonts']);
   gulp.watch([path.source + 'images/**/*'], ['images']);
   gulp.watch(['bower.json', 'assets/manifest.json'], ['build']);

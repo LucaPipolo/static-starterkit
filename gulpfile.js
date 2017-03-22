@@ -20,7 +20,7 @@ var plumber = require('gulp-plumber');
 var rev = require('gulp-rev');
 var runSequence = require('run-sequence');
 var sass = require('gulp-sass');
-var scsslint = require('gulp-scss-lint');
+var sasslint = require('gulp-sass-lint');
 var sourcemaps = require('gulp-sourcemaps');
 var uglify = require('gulp-uglify');
 
@@ -191,7 +191,7 @@ gulp.task('templates', function() {
 // `gulp styles` - Compiles, combines, and optimizes Bower CSS and project CSS.
 // By default this task will only log a warning if a precompiler error is
 // raised. If the `--production` flag is set: this task will fail outright.
-gulp.task('styles', ['wiredep'], function() {
+gulp.task('styles', ['sasslint', 'wiredep'], function() {
   var merged = mergeStream();
   manifest.forEachDependency('css', function(dep) {
     var cssTasksInstance = cssTasks(dep.name);
@@ -254,13 +254,15 @@ gulp.task('images', function() {
     .pipe(browserSync.stream());
 });
 
-// ### Scss Lint
-// `gulp scsslint` - Lints project Scss.
-gulp.task('scsslint', function() {
-  return gulp.src(['assets/styles/**/*.scss'])
-    .pipe(scsslint({
-      'config': '.scss-lint.yml'
-    }));
+// ### Sass Lint
+// `gulp sassLint` - Lints SCSS files.
+gulp.task('sasslint', function () {
+  return gulp.src('./assets/styles/**/*.scss')
+    .pipe(sasslint({
+      configFile: '.sass-lint.yml'
+    }))
+    .pipe(sasslint.format())
+    .pipe(sasslint.failOnError());
 });
 
 // ### CSLint
@@ -291,7 +293,7 @@ gulp.task('clean', require('del').bind(null, [path.dist]));
 // See: http://www.browsersync.io
 gulp.task('watch', function() {
   gulp.watch([path.source + 'templates/**/*'], ['templates']);
-  gulp.watch([path.source + 'styles/**/*'], ['scsslint', 'styles']);
+  gulp.watch([path.source + 'styles/**/*'], ['sasslint', 'styles']);
   gulp.watch([path.source + 'scripts/**/*'], ['cslint', 'scripts']);
   gulp.watch([path.source + 'fonts/**/*'], ['fonts']);
   gulp.watch([path.source + 'images/**/*'], ['images']);

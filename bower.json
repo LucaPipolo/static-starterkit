@@ -1,12 +1,12 @@
 {
-  "name": "project-name",
-  "description": "Project description.",
+  "name": "static-starterkit",
+  "description": "A static website starter structure.",
   "main": "index.html",
   "authors": [
-    "Name Surname <email@domain.com>"
+    "Luca Pipolo <dev@lucapipolo.com>"
   ],
   "license": "GPL-2.0",
-  "homepage": "http://www.your-url.com/",
+  "homepage": "https://www.lucapipolo.com/",
   "private": true,
   "ignore": [
     "**/.*",

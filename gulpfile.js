@@ -6,6 +6,7 @@ var changed = require('gulp-changed');
 var coffee = require('gulp-coffee');
 var concat = require('gulp-concat');
 var cslint = require('gulp-cslint');
+var csscomb = require('gulp-csscomb');
 var flatten = require('gulp-flatten');
 var gulp = require('gulp');
 var gulpif = require('gulp-if');
@@ -254,6 +255,15 @@ gulp.task('images', function() {
     .pipe(browserSync.stream());
 });
 
+// ### CSScomb
+// `gulp csscomb` - Sort CSS rules to follow SMACSS properties order.
+// Settings can be changed on .csscomb.json file.
+gulp.task('csscomb', function() {
+  return gulp.src('./assets/styles/**/*.scss', {base: './'})
+    .pipe(csscomb())
+    .pipe(gulp.dest('./'));
+});
+
 // ### Sass Lint
 // `gulp sassLint` - Lints SCSS files.
 gulp.task('sasslint', function () {
@@ -305,6 +315,7 @@ gulp.task('watch', function() {
 // Generally you should be running `gulp` instead of `gulp build`.
 gulp.task('build', function(callback) {
   runSequence('templates',
+              'csscomb',
               'styles',
               'scripts',
               ['fonts', 'images'],

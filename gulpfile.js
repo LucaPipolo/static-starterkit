@@ -11,13 +11,13 @@ var flatten = require('gulp-flatten');
 var gulp = require('gulp');
 var gulpif = require('gulp-if');
 var imagemin = require('gulp-imagemin');
-var jade = require('gulp-jade');
 var lazypipe = require('lazypipe');
 var less = require('gulp-less');
 var merge = require('merge');
 var mergeStream = require('merge-stream');
 var minifyCss = require('gulp-minify-css');
 var plumber = require('gulp-plumber');
+var pug = require('gulp-pug');
 var rev = require('gulp-rev');
 var runSequence = require('run-sequence');
 var sass = require('gulp-sass');
@@ -180,8 +180,8 @@ var writeToManifest = function(directory) {
 // ### Templates
 // `gulp templates` - Compiles, combines, and optimizes Jade files.
 gulp.task('templates', function() {
-  return gulp.src('assets/templates/**/!(_)*.jade')
-  .pipe(jade({
+  return gulp.src('assets/templates/**/!(_)*.pug')
+  .pipe(pug({
     pretty: true
   }))
   .pipe(gulp.dest(path.dist))

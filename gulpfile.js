@@ -219,7 +219,7 @@ gulp.task('coffee', function() {
 // ### Scripts
 // `gulp scripts` - Runs CSLint then compiles, combines, and optimizes Bower JS
 // and project JS.
-gulp.task('scripts', ['coffee'], function() {
+gulp.task('scripts', ['cslint', 'coffee'], function() {
   var merged = mergeStream();
   manifest.forEachDependency('js', function(dep) {
     merged.add(

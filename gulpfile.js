@@ -1,107 +1,133 @@
-// ## Globals
-var argv = require('minimist')(process.argv.slice(2));
-var autoprefixer = require('gulp-autoprefixer');
-var browserSync = require('browser-sync').create();
-var changed = require('gulp-changed');
-var coffee = require('gulp-coffee');
-var coffeelint = require('gulp-coffeelint');
-var concat = require('gulp-concat');
-var csscomb = require('gulp-csscomb');
-var flatten = require('gulp-flatten');
 var gulp = require('gulp');
+var plugins = require('gulp-load-plugins')();
+
+var argv = require('minimist')(process.argv.slice(2));
+var browserSync = require('browser-sync').create();
 var gulpif = require('gulp-if');
-var imagemin = require('gulp-imagemin');
-var lazypipe = require('lazypipe');
-var less = require('gulp-less');
-var merge = require('merge');
-var mergeStream = require('merge-stream');
-var minifyCss = require('gulp-minify-css');
-var plumber = require('gulp-plumber');
-var pug = require('gulp-pug');
-var rev = require('gulp-rev');
+var gulpFilter = require('gulp-filter');
 var runSequence = require('run-sequence');
-var sass = require('gulp-sass');
-var sasslint = require('gulp-sass-lint');
-var sourcemaps = require('gulp-sourcemaps');
-var uglify = require('gulp-uglify');
 
-// See https://github.com/austinpray/asset-builder
-var manifest = require('asset-builder')('./assets/manifest.json');
-var realManifest = require('asset-builder/lib/readManifest')('./assets/manifest.json');
-
-// `path` - Paths to base asset directories. With trailing slashes.
-// - `path.source` - Path to the source files. Default: `assets/`
-// - `path.dist` - Path to the build directory. Default: `dist/`
-var path = manifest.paths;
-
-// `config` - Store arbitrary configuration values here.
-var config = manifest.config || {};
-
-// `globs` - These ultimately end up in their respective `gulp.src`.
-// - `globs.js` - Array of asset-builder JS dependency objects. Example:
-//   ```
-//   {type: 'js', name: 'main.js', globs: []}
-//   ```
-// - `globs.css` - Array of asset-builder CSS dependency objects. Example:
-//   ```
-//   {type: 'css', name: 'main.css', globs: []}
-//   ```
-// - `globs.fonts` - Array of font path globs.
-// - `globs.images` - Array of image path globs.
-// - `globs.bower` - Array of all the main Bower files.
-var globs = manifest.globs;
-
-// `project` - paths to first-party assets.
-// - `project.js` - Array of first-party JS assets.
-// - `project.css` - Array of first-party CSS assets.
-var project = manifest.getProjectGlobs();
-
-// CLI options
-var enabled = {
-  // Enable static asset revisioning when `--production`
-  rev: argv.production,
-  // Disable source maps when `--production`
-  maps: !argv.production,
-  // Fail styles task on error when `--production`
-  failStyleTask: argv.production,
-  // Strip debug statments from javascript when `--production`
-  stripJSDebug: argv.production
+var options = {
+  srcFolder: './src/',
+  tmpFolder: './.tmp/',
+  distFolder: './dist/'
 };
 
-// Path to the compiled assets manifest in the dist directory
-var revManifest = path.dist + 'assets.json';
+var enabled = {
+  maps: !argv.production
+};
 
-// ## Reusable Pipelines
-// See https://github.com/OverZealous/lazypipe
+// -----------------------------------------------------------------------------
+//   Bower pipeline
+// -----------------------------------------------------------------------------
+gulp.task('bower:styles', function() {
+  var filterCSS = gulpFilter('**/*.css', { restore: true });
+  return gulp.src('./bower.json')
+    .pipe(plugins.mainBowerFiles())
+    .pipe(filterCSS)
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
+    .pipe(plugins.concat('libs.min.css'))
+    .pipe(plugins.cssmin())
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.')))
+    .pipe(plugins.eol())
+    .pipe(gulp.dest(options.distFolder + 'styles'))
+    .pipe(filterCSS.restore)
+    .pipe(browserSync.stream());
+});
 
-// ### CSS processing pipeline
-// Example
-// ```
-// gulp.src(cssFiles)
-//   .pipe(cssTasks('main.css')
-//   .pipe(gulp.dest(path.dist + 'styles'))
-// ```
-var cssTasks = function(filename) {
-  return lazypipe()
-    .pipe(function() {
-      return gulpif(!enabled.failStyleTask, plumber());
-    })
-    .pipe(function() {
-      return gulpif(enabled.maps, sourcemaps.init());
-    })
-    .pipe(function() {
-      return gulpif('*.less', less());
-    })
-    .pipe(function() {
-      return gulpif('*.scss', sass({
-        outputStyle: 'compressed',
-        precision: 10,
-        includePaths: ['.'],
-        errLogToConsole: !enabled.failStyleTask
-      }));
-    })
-    .pipe(concat, filename)
-    .pipe(autoprefixer, {
+gulp.task('bower:scripts', function() {
+  var filterJS = gulpFilter('**/*.js', { restore: true });
+  return gulp.src('./bower.json')
+    .pipe(plugins.mainBowerFiles())
+    .pipe(filterJS)
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
+    .pipe(plugins.concat('libs.min.js'))
+    .pipe(plugins.uglify())
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.')))
+    .pipe(plugins.eol())
+    .pipe(gulp.dest(options.distFolder + 'scripts'))
+    .pipe(filterJS.restore)
+    .pipe(browserSync.stream());
+});
+
+gulp.task('bower:images', function() {
+  var filterImgs = gulpFilter(['**/*.jpg', '**/*.png', '**/*.gif'], { restore: true });
+  return gulp.src('./bower.json')
+    .pipe(plugins.mainBowerFiles())
+    .pipe(filterImgs)
+    .pipe(plugins.flatten())
+    .pipe(plugins.imagemin([
+      plugins.imagemin.jpegtran({progressive: true}),
+      plugins.imagemin.gifsicle({interlaced: true}),
+      plugins.imagemin.svgo({plugins: [{removeUnknownsAndDefaults: false}, {cleanupIDs: false}]})
+    ]))
+    .pipe(gulp.dest(options.distFolder + 'images'))
+    .pipe(filterImgs.restore)
+    .pipe(browserSync.stream());
+});
+
+gulp.task('bower:fonts', function() {
+  var filterFonts = gulpFilter(['**/*.svg', '**/*.ttf', '**/*.eot', '**/*.woff'], { restore: true });
+  return gulp.src('./bower.json')
+    .pipe(plugins.mainBowerFiles())
+    .pipe(filterFonts)
+    .pipe(plugins.flatten())
+    .pipe(gulp.dest(options.distFolder + 'fonts'))
+    .pipe(filterFonts.restore)
+    .pipe(browserSync.stream());
+});
+
+gulp.task('clean:bower', require('del').bind(null, [
+  options.distFolder + 'styles/libs*',
+  options.distFolder + 'scripts/libs*',
+]));
+
+// -----------------------------------------------------------------------------
+//   Template pipeline
+// -----------------------------------------------------------------------------
+gulp.task('lint:pug', function() {
+  return gulp.src(options.srcFolder + 'templates/**/!(_)*.pug')
+    .pipe(plugins.pugLinter())
+    .pipe(plugins.pugLinter.reporter());
+});
+
+gulp.task('compile:pug', function() {
+  return gulp.src(options.srcFolder + 'templates/**/!(_)*.pug')
+    .pipe(plugins.pug({
+      pretty: true
+    }))
+    .pipe(gulp.dest(options.distFolder))
+    .pipe(browserSync.stream());
+});
+
+gulp.task('clean:templates', require('del').bind(null, [
+  options.distFolder + '*.html'
+]));
+
+gulp.task('build:templates', ['clean:templates'], function (callback) {
+  runSequence('lint:pug',
+              'compile:pug',
+              callback);
+});
+
+// -----------------------------------------------------------------------------
+//   Style pipeline
+// -----------------------------------------------------------------------------
+gulp.task('lint:sass', function() {
+  return gulp.src(options.srcFolder + 'styles/**/*.scss')
+    .pipe(plugins.csscomb())
+    .pipe(plugins.sassLint({
+      configFile: '.sass-lint.yml'
+    }))
+    .pipe(plugins.sassLint.format())
+    .pipe(plugins.sassLint.failOnError());
+});
+
+gulp.task('compile:sass', function() {
+  return gulp.src(options.srcFolder + 'styles/**/*.scss')
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
+    .pipe(plugins.sass({outputStyle: 'expanded'}).on('error', plugins.sass.logError))
+    .pipe(plugins.autoprefixer(), {
       browsers: [
         'last 2 versions',
         'ie 8',
@@ -111,224 +137,123 @@ var cssTasks = function(filename) {
         'opera 12'
       ]
     })
-    .pipe(minifyCss, {
-      advanced: false,
-      rebase: false
-    })
-    .pipe(function() {
-      return gulpif(enabled.rev, rev());
-    })
-    .pipe(function() {
-      return gulpif(enabled.maps, sourcemaps.write('.', {
-        sourceRoot: 'assets/styles/'
-      }));
-    })();
-};
-
-// ### JS processing pipeline
-// Example
-// ```
-// gulp.src(jsFiles)
-//   .pipe(jsTasks('main.js')
-//   .pipe(gulp.dest(path.dist + 'scripts'))
-// ```
-var jsTasks = function(filename, configOverrides) {
-  var taskConfig = {
-    uglify: {
-      preserveComments: 'license',
-      compress: {
-        'drop_debugger': enabled.stripJSDebug
-      }
-    }
-  };
-  var pipeConfig = merge.recursive(true, taskConfig, config.js || {}, configOverrides);
-  return lazypipe()
-    .pipe(function() {
-      return gulpif(enabled.maps, sourcemaps.init());
-    })
-    .pipe(concat, filename)
-    .pipe(function () {
-      return gulpif(configOverrides.uglify !== false, uglify(pipeConfig.uglify));
-    })
-    .pipe(function() {
-      return gulpif(enabled.rev, rev());
-    })
-    .pipe(function() {
-      return gulpif(enabled.maps, sourcemaps.write('.', {
-        sourceRoot: 'assets/scripts/'
-      }));
-    })();
-};
-
-// ### Write to rev manifest
-// If there are any revved files then write them to the rev manifest.
-// See https://github.com/sindresorhus/gulp-rev
-var writeToManifest = function(directory) {
-  return lazypipe()
-    .pipe(gulp.dest, path.dist + directory)
-    .pipe(browserSync.stream, {match: '**/*.{js,css}'})
-    .pipe(rev.manifest, revManifest, {
-      base: path.dist,
-      merge: true
-    })
-    .pipe(gulp.dest, path.dist)();
-};
-
-// ## Gulp tasks
-// Run `gulp -T` for a task summary
-
-// ### Templates
-// `gulp templates` - Compiles, combines, and optimizes Jade files.
-gulp.task('templates', function() {
-  return gulp.src('assets/templates/**/!(_)*.pug')
-  .pipe(pug({
-    pretty: true
-  }))
-  .pipe(gulp.dest(path.dist))
-  .pipe(browserSync.stream());
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('../../' + options.distFolder + 'styles/', {sourceRoot: options.srcFolder + 'styles/'})))
+    .pipe(gulp.dest(options.tmpFolder + 'styles/'));
 });
 
-// ### Styles
-// `gulp styles` - Compiles, combines, and optimizes Bower CSS and project CSS.
-// By default this task will only log a warning if a precompiler error is
-// raised. If the `--production` flag is set: this task will fail outright.
-gulp.task('styles', ['sasslint', 'wiredep'], function() {
-  var merged = mergeStream();
-  manifest.forEachDependency('css', function(dep) {
-    var cssTasksInstance = cssTasks(dep.name);
-    if (!enabled.failStyleTask) {
-      cssTasksInstance.on('error', function(err) {
-        console.error(err.message);
-        this.emit('end');
-      });
-    }
-    merged.add(gulp.src(dep.globs, {base: 'styles'})
-      .pipe(cssTasksInstance));
-  });
-  return merged
-    .pipe(writeToManifest('styles'));
-});
-
-// ### Coffee
-// Compiles CoffeeScript files to normal JavaScript.
-gulp.task('coffee', function() {
-  gulp.src('./assets/scripts/**/*.coffee')
-    .pipe(coffee({bare: true}))
-    .pipe(gulp.dest('./assets/scripts/tmp'));
-});
-
-// ### Scripts
-// `gulp scripts` - Runs Coffeelint then compiles, combines, and optimizes Bower JS
-// and project JS.
-gulp.task('scripts', ['coffeelint', 'coffee'], function() {
-  var merged = mergeStream();
-  manifest.forEachDependency('js', function(dep) {
-    merged.add(
-      gulp.src(dep.globs, {base: 'scripts'})
-        .pipe(jsTasks(dep.name, realManifest.dependencies[dep.name].config || {}))
-    );
-  });
-  return merged
-    .pipe(writeToManifest('scripts'));
-});
-
-// ### Fonts
-// `gulp fonts` - Grabs all the fonts and outputs them in a flattened directory
-// structure. See: https://github.com/armed/gulp-flatten
-gulp.task('fonts', function() {
-  return gulp.src(globs.fonts)
-    .pipe(flatten())
-    .pipe(gulp.dest(path.dist + 'fonts'))
+gulp.task('minify:css', function() {
+  return gulp.src(options.tmpFolder + 'styles/*.css')
+    .pipe(plugins.cssmin())
+    .pipe(plugins.rename({suffix: '.min'}))
+    .pipe(plugins.eol())
+    .pipe(gulp.dest(options.distFolder + 'styles/'))
     .pipe(browserSync.stream());
 });
 
-// ### Images
-// `gulp images` - Run lossless compression on all the images.
-gulp.task('images', function() {
-  return gulp.src(globs.images)
-    .pipe(imagemin({
-      progressive: true,
-      interlaced: true,
-      svgoPlugins: [{removeUnknownsAndDefaults: false}, {cleanupIDs: false}]
-    }))
-    .pipe(gulp.dest(path.dist + 'images'))
-    .pipe(browserSync.stream());
-});
+gulp.task('clean:styles', require('del').bind(null, [
+  options.tmpFolder + 'styles/',
+  options.distFolder + 'styles/'
+]));
 
-// ### CSScomb
-// `gulp csscomb` - Sort CSS rules to follow SMACSS properties order.
-// Settings can be changed on .csscomb.json file.
-gulp.task('csscomb', function() {
-  return gulp.src('./assets/styles/**/*.scss', {base: './'})
-    .pipe(csscomb())
-    .pipe(gulp.dest('./'));
-});
-
-// ### Sass Lint
-// `gulp sassLint` - Lints SCSS files.
-gulp.task('sasslint', function () {
-  return gulp.src('./assets/styles/**/*.scss')
-    .pipe(sasslint({
-      configFile: '.sass-lint.yml'
-    }))
-    .pipe(sasslint.format())
-    .pipe(sasslint.failOnError());
-});
-
-// ### Coffeelint
-// `gulp coffeelint` - Lints configuration JSON and project JS.
-gulp.task('coffeelint', function () {
-  return gulp.src(['assets/scripts/**/*.coffee'])
-    .pipe(coffeelint())
-    .pipe(coffeelint.reporter());
-});
-
-// ### Clean
-// `gulp clean` - Deletes the build folder entirely.
-gulp.task('clean', require('del').bind(null, [path.dist]));
-
-// ### Watch
-// `gulp watch` - Use BrowserSync to proxy your dev server and synchronize code
-// changes across devices. Specify the hostname of your dev server at
-// `manifest.config.devUrl`. When a modification is made to an asset, run the
-// build step for that asset and inject the changes into the page.
-// See: http://www.browsersync.io
-gulp.task('watch', function() {
-  gulp.watch([path.source + 'templates/**/*'], ['templates']);
-  gulp.watch([path.source + 'styles/**/*'], ['sasslint', 'styles']);
-  gulp.watch([path.source + 'scripts/**/*.coffee'], ['scripts']);
-  gulp.watch([path.source + 'fonts/**/*'], ['fonts']);
-  gulp.watch([path.source + 'images/**/*'], ['images']);
-  gulp.watch(['bower.json', 'assets/manifest.json'], ['build']);
-});
-
-// ### Build
-// `gulp build` - Run all the build tasks but don't clean up beforehand.
-// Generally you should be running `gulp` instead of `gulp build`.
-gulp.task('build', function(callback) {
-  runSequence('templates',
-              'csscomb',
-              'styles',
-              'scripts',
-              ['fonts', 'images'],
+gulp.task('build:styles', ['clean:styles'], function (callback) {
+  runSequence('lint:sass',
+              'compile:sass',
+              'minify:css',
               callback);
 });
 
-// ### Wiredep
-// `gulp wiredep` - Automatically inject Less and Sass Bower dependencies. See
-// https://github.com/taptapship/wiredep
-gulp.task('wiredep', function() {
-  var wiredep = require('wiredep').stream;
-  return gulp.src(project.css)
-    .pipe(wiredep())
-    .pipe(changed(path.source + 'styles', {
-      hasChanged: changed.compareSha1Digest
-    }))
-    .pipe(gulp.dest(path.source + 'styles'));
+// -----------------------------------------------------------------------------
+//   Script pipeline
+// -----------------------------------------------------------------------------
+gulp.task('lint:coffee', function() {
+  return gulp.src(options.srcFolder + 'scripts/**/*.coffee')
+    .pipe(plugins.coffeelint())
+    .pipe(plugins.coffeelint.reporter());
 });
 
-// ### Gulp
-// `gulp` - Run a complete build. To compile for production run `gulp --production`.
-gulp.task('default', ['clean'], function() {
+gulp.task('compile:coffee', function() {
+  return gulp.src(options.srcFolder + 'scripts/**/*.coffee')
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
+    .pipe(plugins.coffee({bare: true}))
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('../../' + options.distFolder + 'scripts/', {sourceRoot: options.srcFolder + 'scripts/'})))
+    .pipe(gulp.dest(options.tmpFolder + 'scripts/'));
+});
+
+gulp.task('minify:js', function() {
+  return gulp.src(options.tmpFolder + 'scripts/*.js')
+    .pipe(plugins.uglify({
+      preserveComments: 'license'
+    }))
+    .pipe(plugins.rename({suffix: '.min'}))
+    .pipe(plugins.eol())
+    .pipe(gulp.dest(options.distFolder + 'scripts/'))
+    .pipe(browserSync.stream());
+});
+
+gulp.task('clean:scripts', require('del').bind(null, [
+  options.tmpFolder + 'scripts/',
+  options.distFolder + 'scripts/'
+]));
+
+gulp.task('build:scripts', ['clean:scripts'], function (callback) {
+  runSequence('lint:coffee',
+              'compile:coffee',
+              'minify:js',
+              callback);
+});
+
+// -----------------------------------------------------------------------------
+//   Images pipeline
+// -----------------------------------------------------------------------------
+gulp.task('images', function() {
+  return gulp.src(options.srcFolder + 'images/**/*')
+    .pipe(plugins.imagemin([
+      plugins.imagemin.jpegtran({progressive: true}),
+      plugins.imagemin.gifsicle({interlaced: true}),
+      plugins.imagemin.svgo({plugins: [{removeUnknownsAndDefaults: false}, {cleanupIDs: false}]})
+    ]))
+    .pipe(gulp.dest(options.distFolder + 'images/'));
+});
+
+// -----------------------------------------------------------------------------
+//   Fonts pipeline
+// -----------------------------------------------------------------------------
+gulp.task('fonts', function() {
+  return gulp.src(options.srcFolder + 'fonts/**/*')
+    .pipe(plugins.flatten())
+    .pipe(gulp.dest(options.distFolder + 'fonts/'));
+});
+
+// -----------------------------------------------------------------------------
+//   Tasks
+// -----------------------------------------------------------------------------
+gulp.task('clean', require('del').bind(null, [
+  options.tmpFolder,
+  options.distFolder
+]));
+
+gulp.task('default', function() {
   gulp.start('build');
+});
+
+gulp.task('build', ['clean'], function(callback) {
+  runSequence('build:templates',
+              'build:styles',
+              'build:scripts',
+              ['bower:styles', 'bower:scripts', 'bower:images', 'bower:fonts', 'images', 'fonts'],
+              callback);
+});
+
+gulp.task('watch', function() {
+  browserSync.init({
+    server: {
+      baseDir: options.distFolder
+    }
+  });
+  gulp.watch(['./bower.json'], ['clean:bower', 'bower:styles', 'bower:scripts', 'bower:images', 'bower:fonts']);
+  gulp.watch([options.srcFolder + 'templates/**/*'], ['build:templates']);
+  gulp.watch([options.srcFolder + 'styles/**/*'], ['build:styles']);
+  gulp.watch([options.srcFolder + 'scripts/**/*.coffee'], ['build:scripts']);
+  gulp.watch([options.srcFolder + 'images/**/*'], ['images']);
+  gulp.watch([options.srcFolder + 'fonts/**/*'], ['fonts']);
 });

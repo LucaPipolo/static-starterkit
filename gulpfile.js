@@ -28,8 +28,8 @@ gulp.task('bower:styles', function() {
     .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
     .pipe(plugins.concat('libs.min.css'))
     .pipe(plugins.cssmin())
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.')))
     .pipe(plugins.eol('\n'))
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.')))
     .pipe(gulp.dest(options.distFolder + 'styles'))
     .pipe(filterCSS.restore)
     .pipe(browserSync.stream());
@@ -43,8 +43,8 @@ gulp.task('bower:scripts', function() {
     .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
     .pipe(plugins.concat('libs.min.js'))
     .pipe(plugins.uglify())
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.')))
     .pipe(plugins.eol('\n'))
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.')))
     .pipe(gulp.dest(options.distFolder + 'scripts'))
     .pipe(filterJS.restore)
     .pipe(browserSync.stream());
@@ -125,7 +125,6 @@ gulp.task('lint:sass', function() {
 
 gulp.task('compile:sass', function() {
   return gulp.src(options.srcFolder + 'styles/**/*.scss')
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
     .pipe(plugins.sass({outputStyle: 'expanded'}).on('error', plugins.sass.logError))
     .pipe(plugins.autoprefixer(), {
       browsers: [
@@ -137,15 +136,16 @@ gulp.task('compile:sass', function() {
         'opera 12'
       ]
     })
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('../../' + options.distFolder + 'styles/', {sourceRoot: options.srcFolder + 'styles/'})))
     .pipe(gulp.dest(options.tmpFolder + 'styles/'));
 });
 
 gulp.task('minify:css', function() {
   return gulp.src(options.tmpFolder + 'styles/*.css')
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
     .pipe(plugins.cssmin())
     .pipe(plugins.rename({suffix: '.min'}))
     .pipe(plugins.eol('\n'))
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.', {sourceRoot: options.srcFolder + 'styles/'})))
     .pipe(gulp.dest(options.distFolder + 'styles/'))
     .pipe(browserSync.stream());
 });
@@ -174,19 +174,19 @@ gulp.task('lint:coffee', function() {
 
 gulp.task('compile:coffee', function() {
   return gulp.src(options.srcFolder + 'scripts/**/*.coffee')
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
     .pipe(plugins.coffee({bare: true}))
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('../../' + options.distFolder + 'scripts/', {sourceRoot: options.srcFolder + 'scripts/'})))
     .pipe(gulp.dest(options.tmpFolder + 'scripts/'));
 });
 
 gulp.task('minify:js', function() {
   return gulp.src(options.tmpFolder + 'scripts/*.js')
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
     .pipe(plugins.uglify({
       preserveComments: 'license'
     }))
     .pipe(plugins.rename({suffix: '.min'}))
     .pipe(plugins.eol('\n'))
+    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.', {sourceRoot: options.srcFolder + 'scripts/'})))
     .pipe(gulp.dest(options.distFolder + 'scripts/'))
     .pipe(browserSync.stream());
 });

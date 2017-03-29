@@ -156,7 +156,8 @@ gulp.task('clean:styles', require('del').bind(null, [
 ]));
 
 gulp.task('build:styles', ['clean:styles'], function (callback) {
-  runSequence('lint:sass',
+  runSequence('bower:styles',
+              'lint:sass',
               'compile:sass',
               'minify:css',
               callback);
@@ -196,7 +197,8 @@ gulp.task('clean:scripts', require('del').bind(null, [
 ]));
 
 gulp.task('build:scripts', ['clean:scripts'], function (callback) {
-  runSequence('lint:coffee',
+  runSequence('bower:scripts',
+              'lint:coffee',
               'compile:coffee',
               'minify:js',
               callback);

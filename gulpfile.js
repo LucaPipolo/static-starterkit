@@ -29,7 +29,7 @@ gulp.task('bower:styles', function() {
     .pipe(plugins.concat('libs.min.css'))
     .pipe(plugins.cssmin())
     .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.')))
-    .pipe(plugins.eol())
+    .pipe(plugins.eol('\n'))
     .pipe(gulp.dest(options.distFolder + 'styles'))
     .pipe(filterCSS.restore)
     .pipe(browserSync.stream());
@@ -44,7 +44,7 @@ gulp.task('bower:scripts', function() {
     .pipe(plugins.concat('libs.min.js'))
     .pipe(plugins.uglify())
     .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.')))
-    .pipe(plugins.eol())
+    .pipe(plugins.eol('\n'))
     .pipe(gulp.dest(options.distFolder + 'scripts'))
     .pipe(filterJS.restore)
     .pipe(browserSync.stream());
@@ -145,7 +145,7 @@ gulp.task('minify:css', function() {
   return gulp.src(options.tmpFolder + 'styles/*.css')
     .pipe(plugins.cssmin())
     .pipe(plugins.rename({suffix: '.min'}))
-    .pipe(plugins.eol())
+    .pipe(plugins.eol('\n'))
     .pipe(gulp.dest(options.distFolder + 'styles/'))
     .pipe(browserSync.stream());
 });
@@ -186,7 +186,7 @@ gulp.task('minify:js', function() {
       preserveComments: 'license'
     }))
     .pipe(plugins.rename({suffix: '.min'}))
-    .pipe(plugins.eol())
+    .pipe(plugins.eol('\n'))
     .pipe(gulp.dest(options.distFolder + 'scripts/'))
     .pipe(browserSync.stream());
 });

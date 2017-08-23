@@ -6,6 +6,8 @@ var browserSync = require('browser-sync').create();
 var gulpif = require('gulp-if');
 var gulpFilter = require('gulp-filter');
 var runSequence = require('run-sequence');
+var eslint = require('gulp-eslint');
+var babel = require('gulp-babel');
 
 var options = {
   srcFolder: './src/',
@@ -166,15 +168,15 @@ gulp.task('build:styles', ['clean:styles'], function (callback) {
 // -----------------------------------------------------------------------------
 //   Script pipeline
 // -----------------------------------------------------------------------------
-gulp.task('lint:coffee', function() {
-  return gulp.src(options.srcFolder + 'scripts/**/*.coffee')
-    .pipe(plugins.coffeelint())
-    .pipe(plugins.coffeelint.reporter());
+gulp.task('lint:js', function() {
+  return gulp.src(options.srcFolder + 'scripts/**/*.js')
+    .pipe(eslint())
+    .pipe(eslint.format());
 });
 
-gulp.task('compile:coffee', function() {
-  return gulp.src(options.srcFolder + 'scripts/**/*.coffee')
-    .pipe(plugins.coffee({bare: true}))
+gulp.task('transpile:es2016', function () {
+  return gulp.src(options.srcFolder + 'scripts/**/*.js')
+    .pipe(babel())
     .pipe(gulp.dest(options.tmpFolder + 'scripts/'));
 });
 
@@ -198,8 +200,8 @@ gulp.task('clean:scripts', require('del').bind(null, [
 
 gulp.task('build:scripts', ['clean:scripts'], function (callback) {
   runSequence('bower:scripts',
-              'lint:coffee',
-              'compile:coffee',
+              'lint:js',
+              'transpile:es2016',
               'minify:js',
               callback);
 });
@@ -255,7 +257,7 @@ gulp.task('watch', function() {
   gulp.watch(['./bower.json'], ['clean:bower', 'bower:styles', 'bower:scripts', 'bower:images', 'bower:fonts']);
   gulp.watch([options.srcFolder + 'templates/**/*'], ['build:templates']);
   gulp.watch([options.srcFolder + 'styles/**/*'], ['build:styles']);
-  gulp.watch([options.srcFolder + 'scripts/**/*.coffee'], ['build:scripts']);
+  gulp.watch([options.srcFolder + 'scripts/**/*.js'], ['build:scripts']);
   gulp.watch([options.srcFolder + 'images/**/*'], ['images']);
   gulp.watch([options.srcFolder + 'fonts/**/*'], ['fonts']);
 });

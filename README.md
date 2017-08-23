@@ -1,7 +1,7 @@
 # Why this project?
 This project borns from my daily work needs.
 I needed something able to let me quickly set up a fully static website structure,
-based on Gulp, Bower, Pug, Sass and CoffeeScript.
+based on Gulp, Bower, Pug, Sass and JavaScript.
 During the time I improved it since I decided to publish it as repository here
 on GitHub.
 Hope that share it can help who are looking for a stable and effective structure
@@ -66,15 +66,15 @@ finally auto prefixes it. Compiled files are written in the `.tmp` folder.
 folder.
 
 ## Script files
-All Coffee files are placed in `src/scripts` folder.
+All JavaScript files are placed in `src/scripts` folder.
 
 The Gulp workflow for scripts is:
 
-1. `lint:coffee` — takes are of lint, following rules described in the
-`coffeelint.json` file. To know how to customize that file, have a look at the
-[CoffeLint documented rules](http://www.coffeelint.org/).
-2. `compile:coffee` — first generates source maps, then compiles CoffeScript to
-JavaScript. Compiled files are written in the `.tmp` folder.
+1. `lint:js` — takes care of lint, following rules described in the
+`.eslintrc.json` file. To know how to customize that file, have a look at the
+[ESLint documented rules](https://eslint.org/docs/rules/).
+2. `transpile:es2016` — first generates source maps, then transpile ES2015 JavaScript
+into browser-compatible JavaScript. Compiled files are written in the `.tmp` folder.
 3. `minify:js` — uses `uglify` to generate a minified version in the `dist`
 folder. License comments are preserved as default.
 

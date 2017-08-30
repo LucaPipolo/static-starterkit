@@ -1,6 +1,8 @@
+include settings/_settings-core
 doctype
-html(lang="en")
-  include _head
+html(lang=lang)
+  include base/_head
   body
+    include base/_header
     //- JS
-    include _js
+    include base/_js

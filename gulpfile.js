@@ -16,7 +16,8 @@ var options = {
 }
 
 var enabled = {
-  maps: !argv.production
+  maps: !argv.production,
+  pretty: !argv.production
 }
 
 // -----------------------------------------------------------------------------
@@ -95,9 +96,7 @@ gulp.task('lint:pug', function () {
 
 gulp.task('compile:pug', function () {
   return gulp.src(options.srcFolder + 'templates/**/!(_)*.pug')
-    .pipe(plugins.pug({
-      pretty: true
-    }))
+    .pipe(gulpif(enabled.maps, plugins.pug({pretty: true}), plugins.pug()))
     .pipe(gulp.dest(options.distFolder))
     .pipe(browserSync.stream())
 })

@@ -1,6 +1,6 @@
 {
   "name": "static-starterkit",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "A starter kit for static websites.",
   "main": ".dist/index.html",
   "engines": {

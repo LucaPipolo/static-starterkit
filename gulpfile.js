@@ -118,11 +118,13 @@ gulp.task('build:templates', ['clean:templates'], function (callback) {
 gulp.task('lint:sass', function () {
   return gulp.src(options.srcFolder + 'styles/**/*.scss')
     .pipe(plugins.csscomb())
-    .pipe(plugins.sassLint({
-      configFile: '.sass-lint.yml'
+    .pipe(plugins.stylelint({
+      syntax: 'scss',
+      reporters: [{
+        formatter: 'string',
+        console: true
+      }]
     }))
-    .pipe(plugins.sassLint.format())
-    .pipe(plugins.sassLint.failOnError())
 })
 
 gulp.task('compile:sass', function () {

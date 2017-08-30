@@ -1,6 +1,6 @@
 {
   "name": "static-starterkit",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "A starter kit for static websites.",
   "main": ".dist/index.html",
   "engines": {
@@ -48,10 +48,15 @@
     "gulp-pug-linter": "0.4.1",
     "gulp-rename": "1.2.2",
     "gulp-sass": "3.1.0",
-    "gulp-sass-lint": "1.3.2",
     "gulp-sourcemaps": "2.4.1",
+    "gulp-stylelint": "4.0.0",
     "gulp-uglify": "2.1.2",
     "minimist": "1.2.0",
-    "run-sequence": "1.2.2"
+    "run-sequence": "1.2.2",
+    "stylelint": "8.0.0",
+    "stylelint-config-property-sort-order-smacss": "1.1.2",
+    "stylelint-order": "0.6.0",
+    "stylelint-scss": "2.1.0",
+    "stylelint-selector-bem-pattern": "1.1.1"
   }
 }

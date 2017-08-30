@@ -53,10 +53,10 @@ All Sass files are placed in `src/styles` folder and are divided following the
 The Gulp workflow for styles is:
 
 1. `lint:sass` — takes care of lint, following rules described in the
-`.sass-lint.yml` file. As default, it's set to check `hyphenatedbem`
-— from [BEM](http://getbem.com/) — as class name format convention.
-To know how to customize that file, have a look at the [sass-lint documented rules]
-(https://github.com/sasstools/sass-lint/tree/master/docs/rules).
+`.stylelintrc` file. To know how to customize that file, have a look at the [Stylelint documented rules](https://stylelint.io/user-guide/rules/).
+As default, it's set to check `hyphenatedbem`
+— from [BEM](http://getbem.com/) — as class name format convention. To know how to use or customize it, follow [this doc](https://github.com/davidtheclark/stylelint-selector-bem-pattern).
+
 Before linting, the task runs also `csscomb` to sort properties following
 [SMACSS rules](https://smacss.com/book/formatting). You can change these
 settings in the `.csscomb.json` file.

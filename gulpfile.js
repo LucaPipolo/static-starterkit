@@ -116,7 +116,7 @@ gulp.task('build:templates', ['clean:templates'], function (callback) {
 //   Style pipeline
 // -----------------------------------------------------------------------------
 gulp.task('lint:sass', function () {
-  return gulp.src(options.srcFolder + 'styles/**/*.scss')
+  return gulp.src(options.srcFolder + 'styles/**/*.scss', {base: './'})
     .pipe(plugins.csscomb())
     .pipe(plugins.stylelint({
       syntax: 'scss',
@@ -125,6 +125,7 @@ gulp.task('lint:sass', function () {
         console: true
       }]
     }))
+    .pipe(gulp.dest('./'))
 })
 
 gulp.task('compile:sass', function () {

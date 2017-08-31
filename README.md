@@ -1,3 +1,5 @@
+[![Code Climate](https://codeclimate.com/github/LucaPipolo/static-starterkit/badges/gpa.svg)](https://codeclimate.com/github/LucaPipolo/static-starterkit)
+
 # Why this project?
 This project borns from my daily work needs.
 I needed something able to let me quickly set up a fully static website structure,

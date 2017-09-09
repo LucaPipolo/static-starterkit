@@ -103,6 +103,13 @@ gulp.task('compile:pug', function () {
     .pipe(browserSync.stream())
 })
 
+gulp.task('copy:htaccess', function () {
+  return gulp.src(paths.src + '.htaccess')
+    .pipe(plugins.copy(paths.dist, {prefix: 1}))
+    .pipe(gulp.dest(paths.dist))
+    .pipe(browserSync.stream())
+})
+
 gulp.task('clean:templates', require('del').bind(null, [
   paths.dist + '*.html'
 ]))
@@ -111,6 +118,7 @@ gulp.task('build:templates', ['clean:templates'], function (callback) {
   runSequence(
     'lint:pug',
     'compile:pug',
+    'copy:htaccess',
     callback)
 })
 

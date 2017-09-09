@@ -1,6 +1,6 @@
 {
   "name": "static-starterkit",
-  "version": "3.8.0",
+  "version": "3.9.0",
   "description": "A starter kit for static websites.",
   "main": ".dist/index.html",
   "engines": {
@@ -33,6 +33,7 @@
     "gulp-changed": "2.0.0",
     "gulp-clean": "0.3.2",
     "gulp-concat": "2.6.1",
+    "gulp-copy": "^1.0.1",
     "gulp-csscomb": "3.0.8",
     "gulp-cssmin": "0.1.7",
     "gulp-eol": "0.1.2",

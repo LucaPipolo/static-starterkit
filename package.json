@@ -1,6 +1,6 @@
 {
   "name": "static-starterkit",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "description": "A starter kit for static websites.",
   "main": ".dist/index.html",
   "engines": {
@@ -58,5 +58,13 @@
     "stylelint-order": "0.6.0",
     "stylelint-scss": "2.1.0",
     "stylelint-selector-bem-pattern": "1.1.1"
-  }
+  },
+  "browserslist": [
+    "last 2 versions",
+    "ie 8",
+    "ie 9",
+    "android 2.3",
+    "android 4",
+    "opera 12"
+  ]
 }

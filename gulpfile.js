@@ -1,6 +1,8 @@
 var gulp = require('gulp')
 var plugins = require('gulp-load-plugins')()
 
+var pkg = require('./package.json')
+
 var argv = require('minimist')(process.argv.slice(2))
 var browserSync = require('browser-sync').create()
 var gulpif = require('gulp-if')
@@ -131,16 +133,7 @@ gulp.task('lint:sass', function () {
 gulp.task('compile:sass', function () {
   return gulp.src(options.srcFolder + 'styles/**/*.scss')
     .pipe(plugins.sass({outputStyle: 'expanded'}).on('error', plugins.sass.logError))
-    .pipe(plugins.autoprefixer(), {
-      browsers: [
-        'last 2 versions',
-        'ie 8',
-        'ie 9',
-        'android 2.3',
-        'android 4',
-        'opera 12'
-      ]
-    })
+    .pipe(plugins.autoprefixer(pkg.browserslist))
     .pipe(gulp.dest(options.tmpFolder + 'styles/'))
 })
 

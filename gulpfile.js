@@ -11,13 +11,13 @@ var runSequence = require('run-sequence')
 var eslint = require('gulp-eslint')
 var babel = require('gulp-babel')
 
-var options = {
-  srcFolder: './src/',
-  tmpFolder: './.tmp/',
-  distFolder: './dist/'
+var paths = {
+  src: './src/',
+  tmp: './.tmp/',
+  dist: './dist/'
 }
 
-var enabled = {
+var options = {
   maps: !argv.production,
   pretty: !argv.production
 }
@@ -30,12 +30,12 @@ gulp.task('bower:styles', function () {
   return gulp.src('./bower.json')
     .pipe(plugins.mainBowerFiles())
     .pipe(filterCSS)
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
+    .pipe(gulpif(options.maps, plugins.sourcemaps.init()))
     .pipe(plugins.concat('libs.min.css'))
     .pipe(plugins.cssmin())
     .pipe(plugins.eol('\n'))
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.')))
-    .pipe(gulp.dest(options.distFolder + 'styles'))
+    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.')))
+    .pipe(gulp.dest(paths.dist + 'styles'))
     .pipe(filterCSS.restore)
     .pipe(browserSync.stream())
 })
@@ -45,12 +45,12 @@ gulp.task('bower:scripts', function () {
   return gulp.src('./bower.json')
     .pipe(plugins.mainBowerFiles())
     .pipe(filterJS)
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
+    .pipe(gulpif(options.maps, plugins.sourcemaps.init()))
     .pipe(plugins.concat('libs.min.js'))
     .pipe(plugins.uglify())
     .pipe(plugins.eol('\n'))
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.')))
-    .pipe(gulp.dest(options.distFolder + 'scripts'))
+    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.')))
+    .pipe(gulp.dest(paths.dist + 'scripts'))
     .pipe(filterJS.restore)
     .pipe(browserSync.stream())
 })
@@ -66,7 +66,7 @@ gulp.task('bower:images', function () {
       plugins.imagemin.gifsicle({interlaced: true}),
       plugins.imagemin.svgo({plugins: [{removeUnknownsAndDefaults: false}, {cleanupIDs: false}]})
     ]))
-    .pipe(gulp.dest(options.distFolder + 'images'))
+    .pipe(gulp.dest(paths.dist + 'images'))
     .pipe(filterImgs.restore)
     .pipe(browserSync.stream())
 })
@@ -77,34 +77,34 @@ gulp.task('bower:fonts', function () {
     .pipe(plugins.mainBowerFiles())
     .pipe(filterFonts)
     .pipe(plugins.flatten())
-    .pipe(gulp.dest(options.distFolder + 'fonts'))
+    .pipe(gulp.dest(paths.dist + 'fonts'))
     .pipe(filterFonts.restore)
     .pipe(browserSync.stream())
 })
 
 gulp.task('clean:bower', require('del').bind(null, [
-  options.distFolder + 'styles/libs*',
-  options.distFolder + 'scripts/libs*'
+  paths.dist + 'styles/libs*',
+  paths.dist + 'scripts/libs*'
 ]))
 
 // -----------------------------------------------------------------------------
 //   Template pipeline
 // -----------------------------------------------------------------------------
 gulp.task('lint:pug', function () {
-  return gulp.src(options.srcFolder + 'templates/**/!(_)*.pug')
+  return gulp.src(paths.src + 'templates/**/!(_)*.pug')
     .pipe(plugins.pugLinter())
     .pipe(plugins.pugLinter.reporter())
 })
 
 gulp.task('compile:pug', function () {
-  return gulp.src(options.srcFolder + 'templates/**/!(_)*.pug')
-    .pipe(gulpif(enabled.maps, plugins.pug({pretty: true}), plugins.pug()))
-    .pipe(gulp.dest(options.distFolder))
+  return gulp.src(paths.src + 'templates/**/!(_)*.pug')
+    .pipe(gulpif(options.maps, plugins.pug({pretty: true}), plugins.pug()))
+    .pipe(gulp.dest(paths.dist))
     .pipe(browserSync.stream())
 })
 
 gulp.task('clean:templates', require('del').bind(null, [
-  options.distFolder + '*.html'
+  paths.dist + '*.html'
 ]))
 
 gulp.task('build:templates', ['clean:templates'], function (callback) {
@@ -118,7 +118,7 @@ gulp.task('build:templates', ['clean:templates'], function (callback) {
 //   Style pipeline
 // -----------------------------------------------------------------------------
 gulp.task('lint:sass', function () {
-  return gulp.src(options.srcFolder + 'styles/**/*.scss', {base: './'})
+  return gulp.src(paths.src + 'styles/**/*.scss', {base: './'})
     .pipe(plugins.csscomb())
     .pipe(plugins.stylelint({
       syntax: 'scss',
@@ -131,26 +131,26 @@ gulp.task('lint:sass', function () {
 })
 
 gulp.task('compile:sass', function () {
-  return gulp.src(options.srcFolder + 'styles/**/*.scss')
+  return gulp.src(paths.src + 'styles/**/*.scss')
     .pipe(plugins.sass({outputStyle: 'expanded'}).on('error', plugins.sass.logError))
     .pipe(plugins.autoprefixer(pkg.browserslist))
-    .pipe(gulp.dest(options.tmpFolder + 'styles/'))
+    .pipe(gulp.dest(paths.tmp + 'styles/'))
 })
 
 gulp.task('minify:css', function () {
-  return gulp.src(options.tmpFolder + 'styles/*.css')
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
+  return gulp.src(paths.tmp + 'styles/*.css')
+    .pipe(gulpif(options.maps, plugins.sourcemaps.init()))
     .pipe(plugins.cssmin())
     .pipe(plugins.rename({suffix: '.min'}))
     .pipe(plugins.eol('\n'))
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.', {sourceRoot: options.srcFolder + 'styles/'})))
-    .pipe(gulp.dest(options.distFolder + 'styles/'))
+    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.', {sourceRoot: paths.src + 'styles/'})))
+    .pipe(gulp.dest(paths.dist + 'styles/'))
     .pipe(browserSync.stream())
 })
 
 gulp.task('clean:styles', require('del').bind(null, [
-  options.tmpFolder + 'styles/',
-  options.distFolder + 'styles/'
+  paths.tmp + 'styles/',
+  paths.dist + 'styles/'
 ]))
 
 gulp.task('build:styles', ['clean:styles'], function (callback) {
@@ -166,33 +166,33 @@ gulp.task('build:styles', ['clean:styles'], function (callback) {
 //   Script pipeline
 // -----------------------------------------------------------------------------
 gulp.task('lint:js', function () {
-  return gulp.src(options.srcFolder + 'scripts/**/*.js')
+  return gulp.src(paths.src + 'scripts/**/*.js')
     .pipe(eslint())
     .pipe(eslint.format())
 })
 
 gulp.task('transpile:es2016', function () {
-  return gulp.src(options.srcFolder + 'scripts/**/*.js')
+  return gulp.src(paths.src + 'scripts/**/*.js')
     .pipe(babel())
-    .pipe(gulp.dest(options.tmpFolder + 'scripts/'))
+    .pipe(gulp.dest(paths.tmp + 'scripts/'))
 })
 
 gulp.task('minify:js', function () {
-  return gulp.src(options.tmpFolder + 'scripts/*.js')
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.init()))
+  return gulp.src(paths.tmp + 'scripts/*.js')
+    .pipe(gulpif(options.maps, plugins.sourcemaps.init()))
     .pipe(plugins.uglify({
       preserveComments: 'license'
     }))
     .pipe(plugins.rename({suffix: '.min'}))
     .pipe(plugins.eol('\n'))
-    .pipe(gulpif(enabled.maps, plugins.sourcemaps.write('.', {sourceRoot: options.srcFolder + 'scripts/'})))
-    .pipe(gulp.dest(options.distFolder + 'scripts/'))
+    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.', {sourceRoot: paths.src + 'scripts/'})))
+    .pipe(gulp.dest(paths.dist + 'scripts/'))
     .pipe(browserSync.stream())
 })
 
 gulp.task('clean:scripts', require('del').bind(null, [
-  options.tmpFolder + 'scripts/',
-  options.distFolder + 'scripts/'
+  paths.tmp + 'scripts/',
+  paths.dist + 'scripts/'
 ]))
 
 gulp.task('build:scripts', ['clean:scripts'], function (callback) {
@@ -208,30 +208,30 @@ gulp.task('build:scripts', ['clean:scripts'], function (callback) {
 //   Images pipeline
 // -----------------------------------------------------------------------------
 gulp.task('images', function () {
-  return gulp.src(options.srcFolder + 'images/**/*')
+  return gulp.src(paths.src + 'images/**/*')
     .pipe(plugins.imagemin([
       plugins.imagemin.jpegtran({progressive: true}),
       plugins.imagemin.gifsicle({interlaced: true}),
       plugins.imagemin.svgo({plugins: [{removeUnknownsAndDefaults: false}, {cleanupIDs: false}]})
     ]))
-    .pipe(gulp.dest(options.distFolder + 'images/'))
+    .pipe(gulp.dest(paths.dist + 'images/'))
 })
 
 // -----------------------------------------------------------------------------
 //   Fonts pipeline
 // -----------------------------------------------------------------------------
 gulp.task('fonts', function () {
-  return gulp.src(options.srcFolder + 'fonts/**/*')
+  return gulp.src(paths.src + 'fonts/**/*')
     .pipe(plugins.flatten())
-    .pipe(gulp.dest(options.distFolder + 'fonts/'))
+    .pipe(gulp.dest(paths.dist + 'fonts/'))
 })
 
 // -----------------------------------------------------------------------------
 //   Tasks
 // -----------------------------------------------------------------------------
 gulp.task('clean', require('del').bind(null, [
-  options.tmpFolder,
-  options.distFolder
+  paths.tmp,
+  paths.dist
 ]))
 
 gulp.task('default', function () {
@@ -250,13 +250,13 @@ gulp.task('build', ['clean'], function (callback) {
 gulp.task('watch', function () {
   browserSync.init({
     server: {
-      baseDir: options.distFolder
+      baseDir: paths.dist
     }
   })
   gulp.watch(['./bower.json'], ['clean:bower', 'bower:styles', 'bower:scripts', 'bower:images', 'bower:fonts'])
-  gulp.watch([options.srcFolder + 'templates/**/*'], ['build:templates'])
-  gulp.watch([options.srcFolder + 'styles/**/*'], ['build:styles'])
-  gulp.watch([options.srcFolder + 'scripts/**/*.js'], ['build:scripts'])
-  gulp.watch([options.srcFolder + 'images/**/*'], ['images'])
-  gulp.watch([options.srcFolder + 'fonts/**/*'], ['fonts'])
+  gulp.watch([paths.src + 'templates/**/*'], ['build:templates'])
+  gulp.watch([paths.src + 'styles/**/*'], ['build:styles'])
+  gulp.watch([paths.src + 'scripts/**/*.js'], ['build:scripts'])
+  gulp.watch([paths.src + 'images/**/*'], ['images'])
+  gulp.watch([paths.src + 'fonts/**/*'], ['fonts'])
 })

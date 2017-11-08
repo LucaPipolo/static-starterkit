@@ -11,6 +11,15 @@ var runSequence = require('run-sequence')
 var eslint = require('gulp-eslint')
 var babel = require('gulp-babel')
 
+var copyrightPlaceholder = '/*! #copyright DO NOT REMOVE# */'
+const copyrightNotice = ['/*!',
+  ' * ' + pkg.name + ' - ' + pkg.description,
+  ' * @version v' + pkg.version,
+  ' * @link ' + pkg.homepage,
+  ' * @author ' + pkg.author,
+  ' */',
+  ''].join('\n')
+
 var paths = {
   src: './src/',
   tmp: './.tmp/',
@@ -142,6 +151,7 @@ gulp.task('compile:sass', function () {
   return gulp.src(paths.src + 'styles/**/*.scss')
     .pipe(plugins.sass({outputStyle: 'expanded'}).on('error', plugins.sass.logError))
     .pipe(plugins.autoprefixer(pkg.browserslist))
+    .pipe(plugins.replace(copyrightPlaceholder, copyrightNotice))
     .pipe(gulp.dest(paths.tmp + 'styles/'))
 })
 

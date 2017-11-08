@@ -1,6 +1,6 @@
 {
   "name": "static-starterkit",
-  "version": "3.9.1",
+  "version": "3.10.0",
   "description": "A starter kit for static websites.",
   "main": ".dist/index.html",
   "engines": {
@@ -48,6 +48,7 @@
     "gulp-pug": "3.3.0",
     "gulp-pug-linter": "0.4.1",
     "gulp-rename": "1.2.2",
+    "gulp-replace": "0.6.1",
     "gulp-sass": "3.1.0",
     "gulp-sourcemaps": "2.4.1",
     "gulp-stylelint": "4.0.0",

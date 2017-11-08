@@ -198,9 +198,7 @@ gulp.task('transpile:es2016', function () {
 gulp.task('minify:js', function () {
   return gulp.src(paths.tmp + 'scripts/*.js')
     .pipe(gulpif(options.maps, plugins.sourcemaps.init()))
-    .pipe(plugins.uglify({
-      preserveComments: 'license'
-    }))
+    .pipe(plugins.uglify({ output: { comments: 'license' }}))
     .pipe(plugins.rename({suffix: '.min'}))
     .pipe(plugins.eol('\n'))
     .pipe(gulpif(options.maps, plugins.sourcemaps.write('.', {sourceRoot: paths.src + 'scripts/'})))

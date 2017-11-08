@@ -122,6 +122,7 @@
     "selector-type-no-unknown": true,
 
     "string-no-newline": true,
+    "string-quotes": "single",
 
     "unit-case": "lower",
     "unit-no-unknown": true,

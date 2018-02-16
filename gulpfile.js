@@ -71,9 +71,9 @@ gulp.task('bower:images', function () {
     .pipe(filterImgs)
     .pipe(plugins.flatten())
     .pipe(plugins.imagemin([
-      plugins.imagemin.jpegtran({progressive: true}),
-      plugins.imagemin.gifsicle({interlaced: true}),
-      plugins.imagemin.svgo({plugins: [{removeUnknownsAndDefaults: false}, {cleanupIDs: false}]})
+      plugins.imagemin.jpegtran({ progressive: true }),
+      plugins.imagemin.gifsicle({ interlaced: true }),
+      plugins.imagemin.svgo({plugins: [{ removeUnknownsAndDefaults: false }, { cleanupIDs: false }]})
     ]))
     .pipe(gulp.dest(paths.dist + 'images'))
     .pipe(filterImgs.restore)
@@ -107,7 +107,7 @@ gulp.task('lint:pug', function () {
 
 gulp.task('compile:pug', function () {
   return gulp.src(paths.src + 'templates/**/!(_)*.pug')
-    .pipe(gulpif(options.maps, plugins.pug({pretty: true}), plugins.pug()))
+    .pipe(gulpif(options.maps, plugins.pug({ pretty: true }), plugins.pug()))
     .pipe(gulp.dest(paths.dist))
     .pipe(browserSync.stream())
 })
@@ -123,7 +123,7 @@ gulp.task('clean:templates', require('del').bind(null, [
   paths.dist + '*.html'
 ]))
 
-gulp.task('build:templates', ['clean:templates'], function (callback) {
+gulp.task('build:templates', function (callback) {
   runSequence(
     'lint:pug',
     'compile:pug',
@@ -159,9 +159,9 @@ gulp.task('minify:css', function () {
   return gulp.src(paths.tmp + 'styles/*.css')
     .pipe(gulpif(options.maps, plugins.sourcemaps.init()))
     .pipe(plugins.cssmin())
-    .pipe(plugins.rename({suffix: '.min'}))
+    .pipe(plugins.rename({ suffix: '.min' }))
     .pipe(plugins.eol('\n'))
-    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.', {sourceRoot: paths.src + 'styles/'})))
+    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.', { sourceRoot: paths.src + 'styles/' })))
     .pipe(gulp.dest(paths.dist + 'styles/'))
     .pipe(browserSync.stream())
 })
@@ -171,7 +171,7 @@ gulp.task('clean:styles', require('del').bind(null, [
   paths.dist + 'styles/'
 ]))
 
-gulp.task('build:styles', ['clean:styles'], function (callback) {
+gulp.task('build:styles', function (callback) {
   runSequence(
     'bower:styles',
     'lint:sass',
@@ -198,10 +198,10 @@ gulp.task('transpile:es2016', function () {
 gulp.task('minify:js', function () {
   return gulp.src(paths.tmp + 'scripts/*.js')
     .pipe(gulpif(options.maps, plugins.sourcemaps.init()))
-    .pipe(plugins.uglify({ output: { comments: 'license' }}))
-    .pipe(plugins.rename({suffix: '.min'}))
+    .pipe(plugins.uglify({ output: { comments: 'license' } }))
+    .pipe(plugins.rename({ suffix: '.min' }))
     .pipe(plugins.eol('\n'))
-    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.', {sourceRoot: paths.src + 'scripts/'})))
+    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.', { sourceRoot: paths.src + 'scripts/' })))
     .pipe(gulp.dest(paths.dist + 'scripts/'))
     .pipe(browserSync.stream())
 })
@@ -211,7 +211,7 @@ gulp.task('clean:scripts', require('del').bind(null, [
   paths.dist + 'scripts/'
 ]))
 
-gulp.task('build:scripts', ['clean:scripts'], function (callback) {
+gulp.task('build:scripts', function (callback) {
   runSequence(
     'bower:scripts',
     'lint:js',
@@ -226,9 +226,9 @@ gulp.task('build:scripts', ['clean:scripts'], function (callback) {
 gulp.task('images', function () {
   return gulp.src(paths.src + 'images/**/*')
     .pipe(plugins.imagemin([
-      plugins.imagemin.jpegtran({progressive: true}),
-      plugins.imagemin.gifsicle({interlaced: true}),
-      plugins.imagemin.svgo({plugins: [{removeUnknownsAndDefaults: false}, {cleanupIDs: false}]})
+      plugins.imagemin.jpegtran({ progressive: true }),
+      plugins.imagemin.gifsicle({ interlaced: true }),
+      plugins.imagemin.svgo({plugins: [{ removeUnknownsAndDefaults: false }, { cleanupIDs: false }]})
     ]))
     .pipe(gulp.dest(paths.dist + 'images/'))
 })

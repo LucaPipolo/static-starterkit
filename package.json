@@ -1,6 +1,6 @@
 {
   "name": "static-starterkit",
-  "version": "3.10.3",
+  "version": "4.0.0",
   "description": "A starter kit for static websites.",
   "main": "./dist/index.html",
   "engines": {
@@ -10,11 +10,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/LucaPipolo/static-starterkit.git"
-  },
-  "author": "Luca Pipolo <dev@lucapipolo.com>",
+  "repository": "git+https://github.com/LucaPipolo/static-starterkit.git",
+  "author": "Luca Pipolo <hello@lucapipolo.com>",
   "license": "GPL-3.0",
   "bugs": {
     "url": "https://github.com/LucaPipolo/static-starterkit/issues"
@@ -32,7 +29,6 @@
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^4.0.0",
     "gulp-babel": "^7.0.0",
-    "gulp-changed": "^3.1.1",
     "gulp-clean": "^0.3.2",
     "gulp-concat": "^2.6.1",
     "gulp-copy": "^1.0.1",
@@ -45,6 +41,7 @@
     "gulp-if": "^2.0.2",
     "gulp-ignore": "^2.0.2",
     "gulp-imagemin": "^4.0.0",
+    "gulp-inject": "^4.3.1",
     "gulp-load-plugins": "^1.5.0",
     "gulp-main-bower-files": "^1.6.1",
     "gulp-pug": "^3.3.0",
@@ -56,9 +53,9 @@
     "gulp-stylelint": "^5.0.0",
     "gulp-uglify": "^3.0.0",
     "minimist": "^1.2.0",
+    "psi-ngrok": "^0.1.2",
     "run-sequence": "^2.2.0",
     "stylelint": "^8.0.0",
-    "stylelint-config-property-sort-order-smacss": "^2.0.0",
     "stylelint-order": "^0.7.0",
     "stylelint-scss": "^2.1.0",
     "stylelint-selector-bem-pattern": "^2.0.0"

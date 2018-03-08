@@ -1,3 +1,5 @@
+/*! #copyright DO NOT REMOVE# */
+
 (function (project) {
   'use strict'
   project(window.jQuery, window, document)

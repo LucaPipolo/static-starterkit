@@ -1,17 +1,17 @@
-var gulp = require('gulp')
-var plugins = require('gulp-load-plugins')()
+const gulp = require('gulp')
+const plugins = require('gulp-load-plugins')()
 
-var pkg = require('./package.json')
+const pkg = require('./package.json')
 
-var argv = require('minimist')(process.argv.slice(2))
-var browserSync = require('browser-sync').create()
-var gulpif = require('gulp-if')
-var gulpFilter = require('gulp-filter')
-var runSequence = require('run-sequence')
-var eslint = require('gulp-eslint')
-var babel = require('gulp-babel')
+const argv = require('minimist')(process.argv.slice(2))
+const babel = require('gulp-babel')
+const browserSync = require('browser-sync').create()
+const eslint = require('gulp-eslint')
+const gulpif = require('gulp-if')
+const psiNgrok = require('psi-ngrok')
+const runSequence = require('run-sequence')
 
-var copyrightPlaceholder = '/*! #copyright DO NOT REMOVE# */'
+const copyrightPlaceholder = '/*! #copyright DO NOT REMOVE# */'
 const copyrightNotice = ['/*!',
   ' * ' + pkg.name + ' - ' + pkg.description,
   ' * @version v' + pkg.version,
@@ -20,121 +20,27 @@ const copyrightNotice = ['/*!',
   ' */',
   ''].join('\n')
 
-var paths = {
+const paths = {
   src: './src/',
   tmp: './.tmp/',
   dist: './dist/'
 }
 
-var options = {
+const options = {
   maps: !argv.production,
-  pretty: !argv.production
+  pretty: !argv.production,
+  compress: !argv.production
 }
 
-// -----------------------------------------------------------------------------
-//   Bower pipeline
-// -----------------------------------------------------------------------------
-gulp.task('bower:styles', function () {
-  var filterCSS = gulpFilter('**/*.css', { restore: true })
-  return gulp.src('./bower.json')
-    .pipe(plugins.mainBowerFiles())
-    .pipe(filterCSS)
-    .pipe(gulpif(options.maps, plugins.sourcemaps.init()))
-    .pipe(plugins.concat('libs.min.css'))
-    .pipe(plugins.cssmin())
-    .pipe(plugins.eol('\n'))
-    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.')))
-    .pipe(gulp.dest(paths.dist + 'styles'))
-    .pipe(filterCSS.restore)
-    .pipe(browserSync.stream())
-})
+/**
+ * Styles tasks.
+ *
+ * First lints sass files using stylelint, then compile them into a temporary
+ * folder. Finally, generates sourcemaps (if `--production` option is not used)
+ * and minify everything into the `dist`folder.
+ */
 
-gulp.task('bower:scripts', function () {
-  var filterJS = gulpFilter('**/*.js', { restore: true })
-  return gulp.src('./bower.json')
-    .pipe(plugins.mainBowerFiles())
-    .pipe(filterJS)
-    .pipe(gulpif(options.maps, plugins.sourcemaps.init()))
-    .pipe(plugins.concat('libs.min.js'))
-    .pipe(plugins.uglify())
-    .pipe(plugins.eol('\n'))
-    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.')))
-    .pipe(gulp.dest(paths.dist + 'scripts'))
-    .pipe(filterJS.restore)
-    .pipe(browserSync.stream())
-})
-
-gulp.task('bower:images', function () {
-  var filterImgs = gulpFilter(['**/*.jpg', '**/*.png', '**/*.gif'], { restore: true })
-  return gulp.src('./bower.json')
-    .pipe(plugins.mainBowerFiles())
-    .pipe(filterImgs)
-    .pipe(plugins.flatten())
-    .pipe(plugins.imagemin([
-      plugins.imagemin.jpegtran({ progressive: true }),
-      plugins.imagemin.gifsicle({ interlaced: true }),
-      plugins.imagemin.svgo({plugins: [{ removeUnknownsAndDefaults: false }, { cleanupIDs: false }]})
-    ]))
-    .pipe(gulp.dest(paths.dist + 'images'))
-    .pipe(filterImgs.restore)
-    .pipe(browserSync.stream())
-})
-
-gulp.task('bower:fonts', function () {
-  var filterFonts = gulpFilter(['**/*.svg', '**/*.ttf', '**/*.eot', '**/*.woff'], { restore: true })
-  return gulp.src('./bower.json')
-    .pipe(plugins.mainBowerFiles())
-    .pipe(filterFonts)
-    .pipe(plugins.flatten())
-    .pipe(gulp.dest(paths.dist + 'fonts'))
-    .pipe(filterFonts.restore)
-    .pipe(browserSync.stream())
-})
-
-gulp.task('clean:bower', require('del').bind(null, [
-  paths.dist + 'styles/libs*',
-  paths.dist + 'scripts/libs*'
-]))
-
-// -----------------------------------------------------------------------------
-//   Template pipeline
-// -----------------------------------------------------------------------------
-gulp.task('lint:pug', function () {
-  return gulp.src(paths.src + 'templates/**/!(_)*.pug')
-    .pipe(plugins.pugLinter())
-    .pipe(plugins.pugLinter.reporter())
-})
-
-gulp.task('compile:pug', function () {
-  return gulp.src(paths.src + 'templates/**/!(_)*.pug')
-    .pipe(gulpif(options.maps, plugins.pug({ pretty: true }), plugins.pug()))
-    .pipe(gulp.dest(paths.dist))
-    .pipe(browserSync.stream())
-})
-
-gulp.task('copy:htaccess', function () {
-  return gulp.src(paths.src + '.htaccess')
-    .pipe(plugins.copy(paths.dist, {prefix: 1}))
-    .pipe(gulp.dest(paths.dist))
-    .pipe(browserSync.stream())
-})
-
-gulp.task('clean:templates', require('del').bind(null, [
-  paths.dist + '*.html'
-]))
-
-gulp.task('build:templates', function (callback) {
-  runSequence(
-    'lint:pug',
-    'compile:pug',
-    'copy:htaccess',
-    callback)
-})
-
-// -----------------------------------------------------------------------------
-//   Style pipeline
-// -----------------------------------------------------------------------------
-gulp.task('lint:sass', function () {
+gulp.task('styles:lint', function () {
   return gulp.src(paths.src + 'styles/**/*.scss', {base: './'})
     .pipe(plugins.csscomb())
     .pipe(plugins.stylelint({
@@ -147,104 +53,203 @@ gulp.task('lint:sass', function () {
     .pipe(gulp.dest('./'))
 })
 
-gulp.task('compile:sass', function () {
+gulp.task('styles:compile', function () {
   return gulp.src(paths.src + 'styles/**/*.scss')
-    .pipe(plugins.sass({outputStyle: 'expanded'}).on('error', plugins.sass.logError))
+    .pipe(plugins.sass({ outputStyle: 'expanded' }).on('error', plugins.sass.logError))
     .pipe(plugins.autoprefixer(pkg.browserslist))
     .pipe(plugins.replace(copyrightPlaceholder, copyrightNotice))
     .pipe(gulp.dest(paths.tmp + 'styles/'))
 })
 
-gulp.task('minify:css', function () {
+gulp.task('styles:minify', function () {
   return gulp.src(paths.tmp + 'styles/*.css')
-    .pipe(gulpif(options.maps, plugins.sourcemaps.init()))
+    .pipe(gulpif(options.maps,
+      plugins.sourcemaps.init()
+    ))
     .pipe(plugins.cssmin())
     .pipe(plugins.rename({ suffix: '.min' }))
     .pipe(plugins.eol('\n'))
-    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.', { sourceRoot: paths.src + 'styles/' })))
+    .pipe(gulpif(options.maps,
+      plugins.sourcemaps.write('.', { sourceRoot: paths.src + 'styles/' })
+    ))
     .pipe(gulp.dest(paths.dist + 'styles/'))
     .pipe(browserSync.stream())
 })
 
-gulp.task('clean:styles', require('del').bind(null, [
-  paths.tmp + 'styles/',
-  paths.dist + 'styles/'
-]))
-
-gulp.task('build:styles', function (callback) {
+gulp.task('styles:build', function (callback) {
   runSequence(
-    'bower:styles',
-    'lint:sass',
-    'compile:sass',
-    'minify:css',
+    'styles:lint',
+    'styles:compile',
+    'styles:minify',
     callback)
 })
 
-// -----------------------------------------------------------------------------
-//   Script pipeline
-// -----------------------------------------------------------------------------
-gulp.task('lint:js', function () {
+/**
+ * Scripts tasks.
+ *
+ * First lints JavaScript files using eslint, then compile them into a temporary
+ * folder. Finally, generates sourcemaps (if `--production` option is not used)
+ * and minify everything into the `dist` folder.
+ */
+
+gulp.task('scripts:lint', function () {
   return gulp.src(paths.src + 'scripts/**/*.js')
     .pipe(eslint())
     .pipe(eslint.format())
 })
 
-gulp.task('transpile:es2016', function () {
+gulp.task('scripts:transpile', function () {
   return gulp.src(paths.src + 'scripts/**/*.js')
     .pipe(babel())
+    .pipe(plugins.replace(copyrightPlaceholder, copyrightNotice))
     .pipe(gulp.dest(paths.tmp + 'scripts/'))
 })
 
-gulp.task('minify:js', function () {
+gulp.task('scripts:minify', function () {
   return gulp.src(paths.tmp + 'scripts/*.js')
-    .pipe(gulpif(options.maps, plugins.sourcemaps.init()))
+    .pipe(gulpif(options.maps,
+      plugins.sourcemaps.init()
+    ))
     .pipe(plugins.uglify({ output: { comments: 'license' } }))
     .pipe(plugins.rename({ suffix: '.min' }))
     .pipe(plugins.eol('\n'))
-    .pipe(gulpif(options.maps, plugins.sourcemaps.write('.', { sourceRoot: paths.src + 'scripts/' })))
+    .pipe(gulpif(options.maps,
+      plugins.sourcemaps.write('.', { sourceRoot: paths.src + 'scripts/' })
+    ))
     .pipe(gulp.dest(paths.dist + 'scripts/'))
     .pipe(browserSync.stream())
 })
 
-gulp.task('clean:scripts', require('del').bind(null, [
-  paths.tmp + 'scripts/',
-  paths.dist + 'scripts/'
-]))
-
-gulp.task('build:scripts', function (callback) {
+gulp.task('scripts:build', function (callback) {
   runSequence(
-    'bower:scripts',
-    'lint:js',
-    'transpile:es2016',
-    'minify:js',
+    'scripts:lint',
+    'scripts:transpile',
+    'scripts:minify',
     callback)
 })
 
-// -----------------------------------------------------------------------------
-//   Images pipeline
-// -----------------------------------------------------------------------------
+/**
+ * Templates tasks.
+ *
+ * First copy the .htaccess file from the source folder to the dist one, then
+ * lints and compiles pug templates. Finally, injects compiled CSS and JS
+ * resources into compiled HTML. Note that we need two separate tasks for that
+ * to use `async` on script tags.
+ */
+
+gulp.task('templates:lint', function () {
+  return gulp.src(paths.src + 'templates/**/!(_)*.pug')
+    .pipe(plugins.pugLinter())
+    .pipe(plugins.pugLinter.reporter())
+})
+
+gulp.task('templates:compile', function () {
+  return gulp.src(paths.src + 'templates/**/!(_)*.pug')
+    .pipe(
+      gulpif(options.compress,
+        plugins.pug({ pretty: true }),
+        plugins.pug()
+      )
+    )
+    .pipe(gulp.dest(paths.dist))
+    .pipe(browserSync.stream())
+})
+
+gulp.task('templates:htaccess', function () {
+  return gulp.src(paths.src + '.htaccess')
+    .pipe(plugins.copy(paths.dist, { prefix: 1 }))
+    .pipe(gulp.dest(paths.dist))
+    .pipe(browserSync.stream())
+})
+
+gulp.task('templates:injectCSS', function () {
+  return gulp.src(paths.dist + 'index.html')
+    .pipe(plugins.inject(
+      gulp.src([
+        paths.dist + 'styles/**/*.css'
+      ], { read: false }),
+      {
+        relative: true,
+        removeTags: true
+      }
+    ))
+    .pipe(gulp.dest(paths.dist))
+})
+
+gulp.task('templates:injectJS', function () {
+  return gulp.src(paths.dist + 'index.html')
+    .pipe(plugins.inject(
+      gulp.src([
+        paths.dist + 'scripts/**/*.js'
+      ], { read: false }),
+      {
+        relative: true,
+        removeTags: true,
+        transform: (path, file) => {
+          return `<script src="${path}" async></script>`
+        }
+      }
+    ))
+    .pipe(gulp.dest(paths.dist))
+})
+
+gulp.task('templates:build', function (callback) {
+  runSequence(
+    'templates:htaccess',
+    'templates:lint',
+    'templates:compile',
+    'templates:injectCSS',
+    'templates:injectJS',
+    callback)
+})
+
+/**
+ * Images task.
+ *
+ * Compress and optimizes PNG, JPEG, GIF and SVG images.
+ */
+
 gulp.task('images', function () {
   return gulp.src(paths.src + 'images/**/*')
     .pipe(plugins.imagemin([
       plugins.imagemin.jpegtran({ progressive: true }),
       plugins.imagemin.gifsicle({ interlaced: true }),
+      plugins.imagemin.optipng({ optimizationLevel: 5 }),
       plugins.imagemin.svgo({plugins: [{ removeUnknownsAndDefaults: false }, { cleanupIDs: false }]})
     ]))
     .pipe(gulp.dest(paths.dist + 'images/'))
 })
 
-// -----------------------------------------------------------------------------
-//   Fonts pipeline
-// -----------------------------------------------------------------------------
+/**
+ * Fonts task.
+ *
+ * Flatten fonts into the dist folder.
+ */
+
 gulp.task('fonts', function () {
   return gulp.src(paths.src + 'fonts/**/*')
     .pipe(plugins.flatten())
     .pipe(gulp.dest(paths.dist + 'fonts/'))
 })
 
-// -----------------------------------------------------------------------------
-//   Tasks
-// -----------------------------------------------------------------------------
+/**
+ * Performance task.
+ *
+ * It uses Ngrok and Google PageSpeed to perform a local performance test.
+ */
+
+gulp.task('performance:pagespeed-test', function () {
+  psiNgrok()
+})
+
+/**
+ * Build and watch task.
+ *
+ * Clean temporary and dist folders, then build everything.
+ * Use `watch` to start a browserSync based server.
+ * The default task is `build`.
+ */
+
 gulp.task('clean', require('del').bind(null, [
   paths.tmp,
   paths.dist
@@ -256,10 +261,12 @@ gulp.task('default', function () {
 
 gulp.task('build', ['clean'], function (callback) {
   runSequence(
-    'build:templates',
-    'build:styles',
-    'build:scripts',
-    ['bower:styles', 'bower:scripts', 'bower:images', 'bower:fonts', 'images', 'fonts'],
+    'styles:build',
+    'scripts:build',
+    'templates:build',
+    'images',
+    'fonts',
+    'performance:pagespeed-test',
     callback)
 })
 
@@ -269,10 +276,9 @@ gulp.task('watch', function () {
       baseDir: paths.dist
     }
   })
-  gulp.watch(['./bower.json'], ['clean:bower', 'bower:styles', 'bower:scripts', 'bower:images', 'bower:fonts'])
-  gulp.watch([paths.src + 'templates/**/*'], ['build:templates'])
-  gulp.watch([paths.src + 'styles/**/*'], ['build:styles'])
-  gulp.watch([paths.src + 'scripts/**/*.js'], ['build:scripts'])
+  gulp.watch([paths.src + 'styles/**/*'], ['styles:build'])
+  gulp.watch([paths.src + 'scripts/**/*.js'], ['scripts:build'])
+  gulp.watch([paths.src + 'templates/**/*'], ['templates:build'])
   gulp.watch([paths.src + 'images/**/*'], ['images'])
   gulp.watch([paths.src + 'fonts/**/*'], ['fonts'])
 })

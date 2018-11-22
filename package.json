@@ -1,6 +1,6 @@
 {
   "name": "static-starterkit",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "description": "A starter kit for static websites.",
   "main": "./dist/index.html",
   "repository": "git+https://github.com/LucaPipolo/static-starterkit.git",
